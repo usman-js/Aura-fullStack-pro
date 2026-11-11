@@ -88,9 +88,8 @@ class Product(models.Model):
 
     @property
     def effective_price(self):
-        """Returns the active selling price (sale price if defined, else base price)."""
-        if self.sale_price is not None and self.sale_price > Decimal('0.00'):
-            return self.sale_price
+      if self.sale_price is not None:
+        return self.sale_price
         return self.base_price
 
     @property

@@ -1,12 +1,15 @@
+# apps/inventory/models.py
 from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
+
 from apps.products.models import ProductVariant
+
 
 class Inventory(models.Model):
     """
-    Inventory stock tracker for each product variant.
-    Includes database-level check constraint preventing negative stock.
+    Stock tracker for each product variant.
+    A database-level check constraint prevents negative stock.
     """
     variant = models.OneToOneField(
         ProductVariant,
@@ -53,8 +56,8 @@ class InventoryTransactionReason(models.TextChoices):
 
 class InventoryTransaction(models.Model):
     """
-    Immutable ledger of every stock mutation.
-    Ensures complete traceability for audits and financial reconciliations.
+    Immutable ledger of every stock change.
+    Entries can be created but never edited or deleted.
     """
     inventory = models.ForeignKey(
         Inventory,
@@ -94,3 +97,11 @@ class InventoryTransaction(models.Model):
 
     def __str__(self):
         return f"{self.inventory.variant.sku}: {self.quantity_delta:+d} ({self.get_reason_display()})"
+
+    def save(self, *args, **kwargs):
+        if self.pk is not None:
+            raise ValueError("Inventory transactions are immutable.")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValueError("Inventory transactions cannot be deleted.")
